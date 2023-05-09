@@ -4,6 +4,7 @@ import { Config } from './config'
 import { HttpError } from './types/api'
 import { healthCheck, mysqlHealthy } from './healthcheck'
 import mysql from 'mysql2'
+import { AnchorConnect } from './dataSources/AnchorConnect'
 
 const config = new Config()
 
@@ -21,10 +22,33 @@ const pool = mysql.createPool({
 const app: Express = express()
 const port = config.getExpressPort()
 
+const connectDataSources: { [key: string]: any } = {
+    anchor: new AnchorConnect(),
+}
+
 // extract json payload from body automatically
 app.use(bodyParser.json())
 
 app.use(bodyParser.urlencoded({ extended: false }))
+
+app.get('/connect/:connect-type', (req: Request, res: Response) => {
+    const connectType = req.params['connect-type'] || ''
+    const connectDataSource = connectDataSources[connectType] || null
+    if (connectDataSource !== null) {
+        try {
+            const cookie = connectDataSource.getSession(
+                req.body.email,
+                req.body.password
+            )
+            res.status(200).send(cookie)
+        } catch (err) {
+            console.log(err)
+            res.status(400).send('Invalid credentials')
+        }
+    } else {
+        res.status(400).send('Invalid connect type')
+    }
+})
 
 app.get(
     '/health',
