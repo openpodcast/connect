@@ -1,0 +1,31 @@
+version: '3.7'
+services:
+    api:
+        image: openpodcast/connect-api
+        build:
+            context: .
+            dockerfile: Dockerfile
+        volumes:
+            - ./dist:/app/dist
+        env_file:
+            - env.local.test
+        ports:
+            - '8080:8080'
+        links:
+            - db
+    db:
+        image: mysql:8.0
+        volumes:
+            - mysqldata:/var/lib/mysql
+            - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+        ports:
+            - '33006:3306'
+        environment:
+            MYSQL_DATABASE: openpodcast
+            MYSQL_USER: openpodcast
+            MYSQL_ROOT_PASSWORD: openpodcast
+            MYSQL_PASSWORD: openpodcast
+        command: --innodb-buffer-pool-size=128M --innodb-buffer-pool-chunk-size=64M --key-buffer-size=5M --event-scheduler=ON
+
+volumes:
+    mysqldata:
