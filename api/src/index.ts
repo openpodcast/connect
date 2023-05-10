@@ -56,6 +56,8 @@ app.post('/connect/:connecttype', async (req: Request, res: Response) => {
         } else {
             res.status(500).send(err.message)
         }
+    } else {
+        res.status(400).send('Invalid connect type')
     }
 })
 
