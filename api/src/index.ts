@@ -33,27 +33,29 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 app.post('/connect/:connecttype', async (req: Request, res: Response) => {
     const connectType = req.params['connecttype']
-    const connectDataSource = connectDataSources[connectType] || null
+    if (!connectDataSources.hasOwnProperty(connectType)) {
+        return res.status(400).send('Invalid connect type')
+    }
+    const connectDataSource = connectDataSources[connectType]
+
+    // connect type specific handling starts here
+    // might be a good idea to move this to a separate file when there are multiple connect types
     if (!req.body.email || !req.body.password) {
         return res.status(400).send('Missing email or password')
     }
-    if (connectDataSource !== null) {
-        try {
-            const sessionData = await connectDataSource.getSessionData(
-                req.body.email,
-                req.body.password
-            )
-            res.status(200).send(sessionData)
-        } catch (err) {
-            console.log(err)
-            if (err instanceof HttpError && err.status) {
-                res.status(err.status).send(err.message)
-            } else {
-                res.status(500).send(err.message)
-            }
+    try {
+        const sessionData = await connectDataSource.getSessionData(
+            req.body.email,
+            req.body.password
+        )
+        res.status(200).send(sessionData)
+    } catch (err) {
+        console.log(err)
+        if (err instanceof HttpError && err.status) {
+            res.status(err.status).send(err.message)
+        } else {
+            res.status(500).send(err.message)
         }
-    } else {
-        res.status(400).send('Invalid connect type')
     }
 })
 
