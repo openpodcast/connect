@@ -53,17 +53,9 @@ e2e-tests test: ## Start end2end tests (local running server is required)
 status: ## Send status request
 	curl http://localhost:8080/status  -H 'Content-Type: application/json' 
 
-.PHONY: send-api-req-local
-send-api-req-local: ## Send a request to the local running server
-	curl -X POST http://localhost:8080/events -H 'Content-Type: application/json' -H 'Authorization: Bearer dummy-cn389ncoiwuencr' --data-binary "@./fixtures/forwarder.json" 
-
-.PHONY: send-analytics-req-local
-send-analytics-req-local: ## Send analytics request to the local running server
-	curl http://localhost:8080/analytics/v1/1/episodesAge -H 'Content-Type: application/json' -H 'Authorization: Bearer dummy-cn389ncoiwuencr'
-
-.PHONY: send-api-req-prod
-send-api-req-prod: ## Send request to production
-	curl -X POST https://api.openpodcast.dev/connector  -H 'Content-Type: application/json' -H 'Authorization: Bearer dummy-cn389ncoiwuencr' --data-binary "@./fixtures/spotifyListeners.json" 
+.PHONY: send-api-login-local
+send-api-login-local: ## Send a request to the local running server
+	curl -X POST http://localhost:8080/connect/anchor -H 'Content-Type: application/json' --data-binary "@.credentials.json" 
 
 .PHONY: db-shell
 db-shell: ## Opens the mysql shell inside the db container
