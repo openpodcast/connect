@@ -13,9 +13,6 @@ build: ## Build the js code as a static project
 dev: ## Starts the api development server
 	npm run dev
 
-.PHONY: init
-init: install
-
-.PHONY: install
-install: ## Installs dependencies
+.PHONY: install init
+install init: ## Installs dependencies
 	npm install
