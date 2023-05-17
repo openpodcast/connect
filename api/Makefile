@@ -24,7 +24,7 @@ build: ## Build the js code
 
 .PHONY: dev
 dev: ## Starts the api development server
-	npm run dev
+	export LOG_LEVEL=debug && npm run dev
 
 .PHONY: clean
 clean: ## Clean build files
