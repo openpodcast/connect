@@ -8,7 +8,7 @@
       wir informieren Dich aber rechtzeitig.
     </p>
     <div
-      class="w-5/6 max-w-2xl border rounded-md border-gray-300 p-8 shadow-inner"
+      class="w-full max-w-2xl border rounded-md border-gray-300 p-8 shadow-inner"
     >
       <div v-if="showSpinner">
         <div role="status">
