@@ -30,8 +30,14 @@
         </div>
       </div>
       <div v-if="showForm">
-        <div v-if="errorMsg">
-          <p>{{ errorMsg }}</p>
+        <div v-if="errorMsg" class="p-2 bg-red-100 rounded-md flex">
+          <Icon
+            name="material-symbols:error-rounded"
+            class="mx-2 h-8 w-8 text-red-700 shrink-0"
+          />
+          <p>
+            {{ errorMsg }}
+          </p>
         </div>
         <div>
           <input v-model="email" type="text" placeholder="Email Adresse" />
@@ -76,6 +82,7 @@ export default {
       spinnerText: "Die Anmelde-Maske von Anchor wird geladen",
       errorMsg: "",
       showPassword: false,
+      baseURL: useRuntimeConfig().public.apiBase,
     };
   },
   mounted() {
@@ -83,7 +90,7 @@ export default {
     setTimeout(() => {
       this.showSpinner = false;
       this.showForm = true;
-    }, 2000);
+    }, 1);
   },
   methods: {
     login: async function () {
@@ -91,19 +98,19 @@ export default {
         this.errorMsg = "Bitte gib deine Zugangsdaten vollständig ein.";
         return;
       }
-      this.error = "";
+      this.errorMsg = "";
       this.spinnerText = "Anchor wird an OpenPodcast angebunden";
       this.showForm = false;
       this.showSpinner = true;
-      const response = await this.$axios.post(
-        "http://localhost:3000/api/anchor",
-        {
-          email: this.email,
-          password: this.password,
-        }
-      );
-      // if response is 403 show form again and display error message
-      if (response.status === 403) {
+      // send cors request to api
+      const response = await useFetch(this.baseURL + "/connect/anchor", {
+        method: "POST",
+        methods: "cors",
+        body: JSON.stringify({ email: this.email, password: this.password }),
+      });
+      console.log(response);
+      // if response is bnot 200 show form again and display error message
+      if (response.status !== 200) {
         this.showForm = true;
         this.showSpinner = false;
         this.errorMsg =
@@ -116,7 +123,7 @@ export default {
 
 <style scoped>
 input {
-  @apply my-2 p-1 border rounded-md border-gray-300;
+  @apply my-2 p-1 border rounded-md border-gray-300 w-5/6;
 }
 button.blue {
   @apply my-2 py-1 px-4 border rounded-md bg-blue-600 text-white font-bold;
