@@ -1,5 +1,7 @@
 import dotenv from 'dotenv'
 import fs from 'fs'
+import { get } from 'http'
+import winston from 'winston'
 
 class Config {
     constructor() {
@@ -22,6 +24,29 @@ class Config {
             return defaultValue
         }
         return value
+    }
+
+    getLogLevel(): string {
+        return (
+            this.readStringFromEnvOrFile('LOG_LEVEL', 'info') || 'info'
+        ).trim()
+    }
+
+    getLogger(): winston.Logger {
+        const level = this.getLogLevel()
+        // log errors including stack traces to console
+        const logger = winston.createLogger({
+            level,
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.errors({ stack: level === 'debug' }),
+                winston.format.json(),
+                winston.format.prettyPrint()
+            ),
+            transports: [new winston.transports.Console()],
+            exceptionHandlers: [new winston.transports.Console()],
+        })
+        return logger
     }
 
     getExpressPort(): number {

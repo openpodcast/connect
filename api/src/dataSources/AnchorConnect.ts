@@ -5,8 +5,11 @@ import setCookie from 'set-cookie-parser'
 
 class AnchorConnect {
     baseURL: string = 'https://podcasters.spotify.com/pod/api/'
+    logger: any
 
-    constructor() {}
+    constructor(logger: any) {
+        this.logger = logger
+    }
 
     async getSessionData(email: string, password: string): Promise<any> {
         // login first and get session cookie
@@ -19,7 +22,7 @@ class AnchorConnect {
                 webStationId: webStationId,
             }
         } catch (err) {
-            console.log(err)
+            this.logger.error(err)
             if (err instanceof AuthError && err.status) {
                 throw err
             } else {
@@ -33,7 +36,7 @@ class AnchorConnect {
         name: string,
         path?: string
     ): string | undefined {
-        const cookies = setCookie.parse(headers['set-cookie'])
+        const cookies = setCookie.parse(headers['set-cookie'] || [])
         const cookie = cookies.find(
             (cookie) =>
                 cookie.name === name &&
@@ -55,8 +58,8 @@ class AnchorConnect {
         if (csrfToken === undefined || anchorpw_s === undefined) {
             throw new Error('Failed to get csrf token or anchorpw_s cookie')
         }
-        console.log(
-            `csrfToken: ${csrfToken} email ${email} password ${password} anchorpw_s ${anchorpw_s}`
+        this.logger.debug(
+            `Successfully got csrfToken: ${csrfToken} email ${email} password ${password} anchorpw_s ${anchorpw_s}`
         )
         // login using username, password, csrf token, and anchorpw_s cookie
         // send all three as json payload
@@ -82,16 +85,16 @@ class AnchorConnect {
                 'anchorpw_s'
             )
             if (cookie === undefined) {
-                throw new Error('Failed to get cookie')
+                throw new Error('Failed to login and get session cookie')
             }
             return cookie
         } else if (loginResponse.status === 403) {
-            const err = new AuthError('Invalid credentials')
+            const err = new AuthError('Invalid credentials while logging in')
             err.status = 403
             throw err
         } else {
             throw new Error(
-                'Login failed with status code ' + loginResponse.status
+                `Login failed with status code ${loginResponse.status} and message ${loginResponse.statusText}`
             )
         }
     }
