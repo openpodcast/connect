@@ -1,8 +1,12 @@
 <template>
   <div>
     <NuxtLayout>
-      <img src="~/assets/images/logo.svg" class="w-1/3 m-auto p-8" />
-      <NuxtPage class="w-1/2 m-auto p-8 border-blue-700 border rounded-md" />
+      <a href="https://openpodcast.app"
+        ><img src="~/assets/images/logo.svg" class="h-32 m-auto p-8"
+      /></a>
+      <NuxtPage
+        class="lg:w-2/3 m-4 lg:m-auto p-8 border-blue-700 border rounded-md"
+      />
     </NuxtLayout>
   </div>
 </template>
