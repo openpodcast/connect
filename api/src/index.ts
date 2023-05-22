@@ -6,21 +6,31 @@ import { HttpError } from './types/api'
 import { healthCheck, mysqlHealthy } from './healthcheck'
 import mysql from 'mysql2'
 import { AnchorConnect } from './dataSources/AnchorConnect'
+import { AuthRepository } from './db/AuthRepository'
+require('dotenv').config();
 
 const config = new Config()
 
 const logger = config.getLogger()
 
-// const pool = mysql.createPool({
-//     uri: config.getMySQLConnectionString(),
-//     waitForConnections: true,
-//     connectionLimit: 10,
-//     queueLimit: 0,
-//     multipleStatements: true,
-//     // do not touch dates and return native string representation
-//     // see https://github.com/mysqljs/mysql#connection-options
-//     dateStrings: true,
-// })
+const pool = mysql.createPool({
+    uri: config.getMySQLConnectionString(),
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    multipleStatements: true,
+    // do not touch dates and return native string representation
+    // see https://github.com/mysqljs/mysql#connection-options
+    dateStrings: true,
+})
+
+// TODO: Store passphrase in a more secure way
+const passphrase = process.env.PASSPHRASE;
+if (!passphrase) {
+    throw new Error('PASSPHRASE environment variable is not set')
+}
+
+const authRepo = new AuthRepository(pool, passphrase)
 
 const app: Express = express()
 const port = config.getExpressPort()
@@ -77,6 +87,13 @@ app.post('/connect/:connecttype', async (req: Request, res: Response) => {
             req.body.email,
             req.body.password
         )
+
+        // store session data in db
+        await authRepo.storeSessionData(
+            sessionData,
+            connectDataSource.getConnectType()
+        )
+
         res.status(200).send(sessionData)
     } catch (err: any) {
         logger.error(err)
