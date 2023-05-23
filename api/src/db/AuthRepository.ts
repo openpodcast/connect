@@ -1,4 +1,3 @@
-import * as openpgp from 'openpgp'
 import { v4 as uuidv4 } from 'uuid'
 
 class AuthRepository {
@@ -8,25 +7,6 @@ class AuthRepository {
     constructor(pool: any, passphrase: string) {
         this.pool = pool
         this.passphrase = passphrase
-    }
-
-    // encrypts a value using a GPG passphrase
-    // and returns a base64 encoded string
-    async encryptValue(text: string): Promise<string> {
-        const message = await openpgp.createMessage({ text })
-        const encrypted = await openpgp.encrypt({
-            message: message,
-            passwords: [this.passphrase],
-            format: 'binary',
-        })
-        const encryptedMessage = await openpgp.readMessage({
-            binaryMessage: encrypted,
-        })
-        const base64Encrypted = Buffer.from(
-            encryptedMessage.packets.write()
-        ).toString('base64')
-
-        return base64Encrypted
     }
 
     // Session data is stored in the podcastConnectWaitlist table
