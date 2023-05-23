@@ -4,7 +4,7 @@ import bodyParser from 'body-parser'
 import { Config } from './config'
 import { HttpError } from './types/api'
 import { healthCheck, mysqlHealthy } from './healthcheck'
-import mysql from 'mysql2'
+import mysql from 'mysql2/promise'
 import { AnchorConnect } from './dataSources/AnchorConnect'
 import { AuthRepository } from './db/AuthRepository'
 

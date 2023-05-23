@@ -1,4 +1,5 @@
 import openpgp from 'openpgp'
+import { v4 as uuidv4 } from 'uuid'
 
 class AuthRepository {
     pool
@@ -35,19 +36,23 @@ class AuthRepository {
         sessionData: Object,
         connectType: string
     ): Promise<any> {
+        let sessionUUID = uuidv4() // Generates a new UUID
+
         const sessionInsertStmt = `INSERT INTO podcastConnectWaitlist (
             env_name,
             env_value,
-            value_encrypted
+            value_encrypted,
+            session_id
             ) VALUES
-            (?,?,?)`
+            (?,?,?,?)`
 
         // Store the connectType in the database and get the session_id
-        const session_id = await this.pool
-            .query(sessionInsertStmt, ['connectType', connectType, false])
-            .then((result: any) => {
-                return result.insertId
-            })
+        await this.pool.query(sessionInsertStmt, [
+            'connectType',
+            connectType,
+            false,
+            sessionUUID,
+        ])
 
         const insertStmt = `INSERT INTO podcastConnectWaitlist (
             env_name,
@@ -65,7 +70,7 @@ class AuthRepository {
                         key,
                         value,
                         encryptedValue,
-                        session_id,
+                        sessionUUID,
                     ])
                 }
             )
