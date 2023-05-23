@@ -1,4 +1,4 @@
-import openpgp from 'openpgp'
+import * as openpgp from 'openpgp'
 import { v4 as uuidv4 } from 'uuid'
 
 class AuthRepository {
@@ -36,24 +36,6 @@ class AuthRepository {
         sessionData: Object,
         connectType: string
     ): Promise<any> {
-        let sessionUUID = uuidv4() // Generates a new UUID
-
-        const sessionInsertStmt = `INSERT INTO podcastConnectWaitlist (
-            env_name,
-            env_value,
-            value_encrypted,
-            session_id
-            ) VALUES
-            (?,?,?,?)`
-
-        // Store the connectType in the database and get the session_id
-        await this.pool.query(sessionInsertStmt, [
-            'connectType',
-            connectType,
-            false,
-            sessionUUID,
-        ])
-
         const insertStmt = `INSERT INTO podcastConnectWaitlist (
             env_name,
             env_value,
@@ -62,19 +44,27 @@ class AuthRepository {
             ) VALUES
             (?,?,?,?)`
 
-        return await Promise.all(
-            Object.entries(sessionData).map(
+        const sessionUUID = uuidv4() // Generates a new UUID
+
+        return await Promise.all([
+            this.pool.query(insertStmt, [
+                'connectType',
+                connectType,
+                false,
+                sessionUUID,
+            ]),
+            ...Object.entries(sessionData).map(
                 async ([key, value]: [string, string]): Promise<any> => {
                     const encryptedValue = await this.encryptValue(value)
                     return await this.pool.query(insertStmt, [
                         key,
-                        value,
                         encryptedValue,
+                        true,
                         sessionUUID,
                     ])
                 }
-            )
-        )
+            ),
+        ])
     }
 }
 

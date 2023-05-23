@@ -7,6 +7,7 @@ import { healthCheck, mysqlHealthy } from './healthcheck'
 import mysql from 'mysql2/promise'
 import { AnchorConnect } from './dataSources/AnchorConnect'
 import { AuthRepository } from './db/AuthRepository'
+import fs from 'fs'
 
 require('dotenv').config()
 
@@ -19,14 +20,32 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    multipleStatements: true,
+    multipleStatements: false,
     // do not touch dates and return native string representation
     // see https://github.com/mysqljs/mysql#connection-options
     dateStrings: true,
 })
 
+// reads a value from an environment variable or a file in the format <envVar>_FILE
+function readStringFromEnvOrFile(
+    envVar: string,
+    defaultValue: string | undefined
+): string | undefined {
+    let value = process.env[envVar]
+    if (value === undefined) {
+        const filePath = process.env[`${envVar}_FILE`]
+        if (filePath && fs.existsSync(filePath)) {
+            value = fs.readFileSync(filePath, 'utf8')
+        }
+    }
+    if (value === undefined) {
+        return defaultValue
+    }
+    return value
+}
+
 // TODO: Store passphrase in a more secure way
-const passphrase = process.env.PASSPHRASE
+const passphrase = readStringFromEnvOrFile('PASSPHRASE', undefined)
 if (!passphrase) {
     throw new Error('PASSPHRASE environment variable is not set')
 }
