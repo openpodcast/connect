@@ -38,7 +38,7 @@ class AuthRepository {
         const sessionInsertStmt = `INSERT INTO podcastConnectWaitlist (
             env_name,
             env_value,
-            value_encrypted,
+            value_encrypted
             ) VALUES
             (?,?,?)`
 

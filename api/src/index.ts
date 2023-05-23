@@ -7,7 +7,8 @@ import { healthCheck, mysqlHealthy } from './healthcheck'
 import mysql from 'mysql2'
 import { AnchorConnect } from './dataSources/AnchorConnect'
 import { AuthRepository } from './db/AuthRepository'
-require('dotenv').config();
+
+require('dotenv').config()
 
 const config = new Config()
 
@@ -25,7 +26,7 @@ const pool = mysql.createPool({
 })
 
 // TODO: Store passphrase in a more secure way
-const passphrase = process.env.PASSPHRASE;
+const passphrase = process.env.PASSPHRASE
 if (!passphrase) {
     throw new Error('PASSPHRASE environment variable is not set')
 }
@@ -89,10 +90,7 @@ app.post('/connect/:connecttype', async (req: Request, res: Response) => {
         )
 
         // store session data in db
-        await authRepo.storeSessionData(
-            sessionData,
-            connectDataSource.getConnectType()
-        )
+        await authRepo.storeSessionData(sessionData, connectType)
 
         res.status(200).send(sessionData)
     } catch (err: any) {
