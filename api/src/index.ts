@@ -8,6 +8,8 @@ import mysql from 'mysql2/promise'
 import { AnchorConnect } from './dataSources/AnchorConnect'
 import { AuthRepository } from './db/AuthRepository'
 import fs from 'fs'
+import { default as Crypto } from './Crypto'
+import { level } from 'winston'
 
 require('dotenv').config()
 
@@ -26,31 +28,8 @@ const pool = mysql.createPool({
     dateStrings: true,
 })
 
-// reads a value from an environment variable or a file in the format <envVar>_FILE
-function readStringFromEnvOrFile(
-    envVar: string,
-    defaultValue: string | undefined
-): string | undefined {
-    let value = process.env[envVar]
-    if (value === undefined) {
-        const filePath = process.env[`${envVar}_FILE`]
-        if (filePath && fs.existsSync(filePath)) {
-            value = fs.readFileSync(filePath, 'utf8')
-        }
-    }
-    if (value === undefined) {
-        return defaultValue
-    }
-    return value
-}
-
-// TODO: Store passphrase in a more secure way
-const passphrase = readStringFromEnvOrFile('PASSPHRASE', undefined)
-if (!passphrase) {
-    throw new Error('PASSPHRASE environment variable is not set')
-}
-
-const authRepo = new AuthRepository(pool, passphrase)
+const passphrase = config.getCryptoPassphrase()
+const authRepo = new AuthRepository(pool, new Crypto(passphrase))
 
 const app: Express = express()
 const port = config.getExpressPort()
@@ -109,9 +88,14 @@ app.post('/connect/:connecttype', async (req: Request, res: Response) => {
         )
 
         // store session data in db
-        await authRepo.storeSessionData(sessionData, connectType)
+        try {
+            await authRepo.storeSessionData(sessionData, connectType)
+        } catch (err: any) {
+            logger.error(err)
+            return res.status(500).send(err.message)
+        }
 
-        res.status(200).send(sessionData)
+        res.status(200).send(`${connectType} connect successful`)
     } catch (err: any) {
         logger.error(err)
         if (err instanceof HttpError && err.status) {
@@ -147,7 +131,11 @@ app.use(function (err: Error, req: Request, res: Response) {
         logger.error(err)
     }
     res.status(httpCode)
-    res.send(err.message)
+    if (config.getLogLevel() === 'debug') {
+        res.send(err.message)
+    } else {
+        res.send('Internal Server Error')
+    }
 })
 
 app.listen(port, () => {

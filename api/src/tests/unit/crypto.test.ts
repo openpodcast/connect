@@ -1,4 +1,4 @@
-import Crypto from '../../crypto'
+import Crypto from '../../Crypto'
 
 const passphrase = 'supersecret'
 const original = 'testvalue'

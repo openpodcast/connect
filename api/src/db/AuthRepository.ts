@@ -1,12 +1,13 @@
 import { v4 as uuidv4 } from 'uuid'
+import { default as Crypto } from '../Crypto'
 
 class AuthRepository {
     pool
-    passphrase
+    crypto
 
-    constructor(pool: any, passphrase: string) {
+    constructor(pool: any, crypto: Crypto) {
         this.pool = pool
-        this.passphrase = passphrase
+        this.crypto = crypto
     }
 
     // Session data is stored in the podcastConnectWaitlist table
@@ -35,7 +36,7 @@ class AuthRepository {
             ]),
             ...Object.entries(sessionData).map(
                 async ([key, value]: [string, string]): Promise<any> => {
-                    const encryptedValue = await this.encryptValue(value)
+                    const encryptedValue = await this.crypto.encryptValue(value)
                     return await this.pool.query(insertStmt, [
                         key,
                         encryptedValue,

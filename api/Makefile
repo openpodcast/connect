@@ -27,6 +27,7 @@ build: ## Build the js code
 
 .PHONY: dev
 dev: ## Starts the api development server
+	set -a && source env.local.test && set +a && \
 	export LOG_LEVEL=debug && npm run dev
 
 .PHONY: clean
