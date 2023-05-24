@@ -33,6 +33,8 @@ test('not valid string throws an error', async () => {
 
 test('weird string throws an error', async () => {
     await expect(
+        // in the python lib this value was considered as a valid base64 string
+        // so to be on the safe side, we check it in the node lib as well
         crypto.decryptValue('https://apple-automation.somedomain.com/endpoint')
     ).rejects.toThrow()
 })
