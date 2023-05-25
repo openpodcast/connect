@@ -48,14 +48,16 @@ app.disable('x-powered-by')
 
 // CORS Handling
 
-const corsAllowList = [
-    'http://localhost:3001',
-    'https://connect.openpodcast.app',
-]
+const corsAllowList = ['https://connect.openpodcast.app']
 
 const corsOptions = {
     origin: function (origin: string | undefined, callback: any) {
-        if (origin && corsAllowList.indexOf(origin) !== -1) {
+        if (
+            origin &&
+            (origin.startsWith('http://localhost:') ||
+                origin.startsWith('https://localhost:') ||
+                corsAllowList.indexOf(origin) !== -1)
+        ) {
             callback(null, true)
         } else {
             callback(new Error('Not allowed by CORS'))
