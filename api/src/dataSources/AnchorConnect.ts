@@ -13,7 +13,7 @@ class AnchorConnect {
 
     async getSessionData(email: string, password: string): Promise<any> {
         // login first and get session cookie
-        // then fetch web station id and return eveything in an object
+        // then fetch web station id and return everything in an object
         try {
             const sessionCookie = await this.getSession(email, password)
             const webStationId = await this.getWebStationId(sessionCookie)

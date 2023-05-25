@@ -7,8 +7,12 @@ services:
             dockerfile: Dockerfile
         volumes:
             - ./dist:/app/dist
-        env_file:
-            - env.local.test
+        environment:
+            - MYSQL_HOST=db
+            - MYSQL_USER=openpodcast_auth
+            - MYSQL_PASSWORD=openpodcast_auth
+            - MYSQL_DATABASE=openpodcast_auth
+            - MYSQL_PORT=3306
         ports:
             - '8080:8080'
         links:
@@ -17,14 +21,14 @@ services:
         image: mysql:8.0
         volumes:
             - mysqldata:/var/lib/mysql
-            - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+            - ./db_local_dev/schema.sql:/docker-entrypoint-initdb.d/00_schema.sql
         ports:
             - '33006:3306'
         environment:
-            MYSQL_DATABASE: openpodcast
-            MYSQL_USER: openpodcast
-            MYSQL_ROOT_PASSWORD: openpodcast
-            MYSQL_PASSWORD: openpodcast
+            MYSQL_DATABASE: openpodcast_auth
+            MYSQL_USER: openpodcast_auth
+            MYSQL_ROOT_PASSWORD: openpodcast_auth
+            MYSQL_PASSWORD: openpodcast_auth
         command: --innodb-buffer-pool-size=128M --innodb-buffer-pool-chunk-size=64M --key-buffer-size=5M --event-scheduler=ON
 
 volumes:

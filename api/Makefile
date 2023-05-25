@@ -7,8 +7,11 @@ help: ## help message, list all command
 
 .PHONY: up docker-run
 up docker-run: docker-build ## docker-compose up
-	touch dbinit.sql
 	docker compose up --build
+
+.PHONY: up-db
+up-db: ## docker-compose up db
+	docker compose up db
 
 .PHONY: down docker-down
 down docker-down: ## docker-compose down
@@ -24,6 +27,7 @@ build: ## Build the js code
 
 .PHONY: dev
 dev: ## Starts the api development server
+	set -a && source env.local.test && set +a && \
 	export LOG_LEVEL=debug && npm run dev
 
 .PHONY: clean
@@ -45,9 +49,13 @@ install: ## Installs dependencies
 shell-% sh-%: ## Run a shell in a container
 	docker compose exec $* sh
 
-.PHONY: e2e-tests test
-e2e-tests test: ## Start end2end tests (local running server is required)
+.PHONY: e2e-tests
+e2e-tests: ## Start end2end tests (local running server is required)
 	npx jest ./tests/api_e2e --verbose true
+
+.PHONY: test
+test: ## run unit tests
+	npx jest ./tests/unit --verbose true
 
 .PHONY: status
 status: ## Send status request

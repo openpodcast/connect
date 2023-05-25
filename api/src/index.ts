@@ -4,23 +4,32 @@ import bodyParser from 'body-parser'
 import { Config } from './config'
 import { HttpError } from './types/api'
 import { healthCheck, mysqlHealthy } from './healthcheck'
-import mysql from 'mysql2'
+import mysql from 'mysql2/promise'
 import { AnchorConnect } from './dataSources/AnchorConnect'
+import { AuthRepository } from './db/AuthRepository'
+import fs from 'fs'
+import { default as Crypto } from './Crypto'
+import { level } from 'winston'
+
+require('dotenv').config()
 
 const config = new Config()
 
 const logger = config.getLogger()
 
-// const pool = mysql.createPool({
-//     uri: config.getMySQLConnectionString(),
-//     waitForConnections: true,
-//     connectionLimit: 10,
-//     queueLimit: 0,
-//     multipleStatements: true,
-//     // do not touch dates and return native string representation
-//     // see https://github.com/mysqljs/mysql#connection-options
-//     dateStrings: true,
-// })
+const pool = mysql.createPool({
+    uri: config.getMySQLConnectionString(),
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    multipleStatements: false,
+    // do not touch dates and return native string representation
+    // see https://github.com/mysqljs/mysql#connection-options
+    dateStrings: true,
+})
+
+const passphrase = config.getCryptoPassphrase()
+const authRepo = new AuthRepository(pool, new Crypto(passphrase))
 
 const app: Express = express()
 const port = config.getExpressPort()
@@ -40,7 +49,7 @@ app.disable('x-powered-by')
 // CORS Handling
 
 const corsAllowList = [
-    'http://localhost:3000',
+    'http://localhost:3001',
     'https://connect.openpodcast.app',
 ]
 
@@ -77,7 +86,16 @@ app.post('/connect/:connecttype', async (req: Request, res: Response) => {
             req.body.email,
             req.body.password
         )
-        res.status(200).send(sessionData)
+
+        // store session data in db
+        try {
+            await authRepo.storeSessionData(sessionData, connectType)
+        } catch (err: any) {
+            logger.error(err)
+            return res.status(500).send(err.message)
+        }
+
+        res.status(200).send(`${connectType} connect successful`)
     } catch (err: any) {
         logger.error(err)
         if (err instanceof HttpError && err.status) {
@@ -113,7 +131,11 @@ app.use(function (err: Error, req: Request, res: Response) {
         logger.error(err)
     }
     res.status(httpCode)
-    res.send(err.message)
+    if (config.getLogLevel() === 'debug') {
+        res.send(err.message)
+    } else {
+        res.send('Internal Server Error')
+    }
 })
 
 app.listen(port, () => {

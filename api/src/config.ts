@@ -26,6 +26,14 @@ class Config {
         return value
     }
 
+    getCryptoPassphrase(): string {
+        const passphrase = this.readStringFromEnvOrFile('PASSPHRASE', undefined)
+        if (!passphrase) {
+            throw new Error('PASSPHRASE environment variable is not set')
+        }
+        return passphrase
+    }
+
     getLogLevel(): string {
         return (
             this.readStringFromEnvOrFile('LOG_LEVEL', 'info') || 'info'
