@@ -9,6 +9,10 @@ help: ## help message, list all command
 build: ## Build the js code as a static project
 	npm run generate
 
+.PHONY: docker-build
+docker-build: ## Build the docker image
+	docker build -t openpodcast/webapp .
+
 .PHONY: dev
 dev: ## Starts the api development server
 	npm run dev
