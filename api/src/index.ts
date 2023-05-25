@@ -49,7 +49,7 @@ app.disable('x-powered-by')
 // CORS Handling
 
 const corsAllowList = [
-    'http://localhost:3000',
+    'http://localhost:3001',
     'https://connect.openpodcast.app',
 ]
 
