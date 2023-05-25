@@ -1,4 +1,4 @@
-name: Docker
+name: Docker (API)
 on:
   repository_dispatch:
   workflow_dispatch:
@@ -16,7 +16,7 @@ on:
       - main
 
 env:
-  IMAGE_NAME: openpodcast/connect
+  IMAGE_NAME: openpodcast/connect-api
   DOCKER_PLATFORMS: linux/amd64,linux/arm64/v8
 
 jobs:
@@ -92,4 +92,4 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: ${{ env.IMAGE_NAME }}
-          readme-filepath: README.md
+          readme-filepath: ./api/README.md
