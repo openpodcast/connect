@@ -52,12 +52,10 @@ const corsAllowList = ['https://connect.openpodcast.app']
 
 const corsOptions = {
     origin: function (origin: string | undefined, callback: any) {
-        if (
-            origin &&
-            (origin.startsWith('http://localhost:') ||
-                origin.startsWith('https://localhost:') ||
-                corsAllowList.indexOf(origin) !== -1)
-        ) {
+        if (process.env.NODE_ENV === 'development') {
+            // Allowing all origins for CORS in development mode
+            callback(null, true)
+        } else if (origin && corsAllowList.indexOf(origin) !== -1) {
             callback(null, true)
         } else {
             callback(new Error('Not allowed by CORS'))
