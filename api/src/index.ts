@@ -61,6 +61,9 @@ const corsOptions = {
     },
 }
 
+// enable cors for all routes, the cors middleware is registered with every route that is CORS protected
+app.options('*', cors(corsOptions))
+
 app.post(
     '/connect/:connecttype',
     cors(corsOptions),
