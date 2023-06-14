@@ -18,6 +18,11 @@ class Config {
             const filePath = process.env[`${envVar}_FILE`]
             if (filePath && fs.existsSync(filePath)) {
                 value = fs.readFileSync(filePath, 'utf8')
+                if (value.trim().length === 0) {
+                    console.log(
+                        `WARNING: File ${filePath} for variable ${envVar} is empty`
+                    )
+                }
             }
         }
         if (value === undefined) {
@@ -82,7 +87,9 @@ class Config {
             if (host && user && password && database && port) {
                 connectionString = `mysql://${user}:${password}@${host}:${port}/${database}${options}`
             } else {
-                console.log(options)
+                console.log(
+                    `host: ${host} user: ${user} password: ${password} database: ${database} port: ${port}`
+                )
                 throw new Error(
                     'MySQL connection string not defined or could not be built from environment variables'
                 )

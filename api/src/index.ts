@@ -7,9 +7,7 @@ import { healthCheck, mysqlHealthy } from './healthcheck'
 import mysql from 'mysql2/promise'
 import { AnchorConnect } from './dataSources/AnchorConnect'
 import { AuthRepository } from './db/AuthRepository'
-import fs from 'fs'
 import { default as Crypto } from './Crypto'
-import { level } from 'winston'
 
 require('dotenv').config()
 
@@ -58,60 +56,62 @@ const corsOptions = {
         } else if (origin && corsAllowList.indexOf(origin) !== -1) {
             callback(null, true)
         } else {
-            callback(new Error('Not allowed by CORS'))
+            callback('Not allowed by CORS', false)
         }
     },
 }
 
-app.use(cors(corsOptions))
+app.post(
+    '/connect/:connecttype',
+    cors(corsOptions),
+    async (req: Request, res: Response) => {
+        const connectType = req.params['connecttype']
+        if (!connectDataSources.hasOwnProperty(connectType)) {
+            return res.status(400).send('Invalid connect type')
+        }
+        const connectDataSource = connectDataSources[connectType]
 
-app.post('/connect/:connecttype', async (req: Request, res: Response) => {
-    const connectType = req.params['connecttype']
-    if (!connectDataSources.hasOwnProperty(connectType)) {
-        return res.status(400).send('Invalid connect type')
-    }
-    const connectDataSource = connectDataSources[connectType]
+        // connect type specific handling starts here
+        // might be a good idea to move this to a separate file when there are multiple connect types
 
-    // connect type specific handling starts here
-    // might be a good idea to move this to a separate file when there are multiple connect types
-
-    // check if email and password are present and valid
-    const email = req.body.email
-    const password = req.body.password
-    if (!email || !password || email.length < 4 || password.length < 5) {
-        return res.status(400).send('Missing email or password')
-    }
-    try {
-        const sessionData = await connectDataSource.getSessionData(
-            req.body.email,
-            req.body.password
-        )
-
-        // store session data in db
+        // check if email and password are present and valid
+        const email = req.body.email
+        const password = req.body.password
+        if (!email || !password || email.length < 4 || password.length < 5) {
+            return res.status(400).send('Missing email or password')
+        }
         try {
-            await authRepo.storeSessionData(sessionData, connectType)
+            const sessionData = await connectDataSource.getSessionData(
+                req.body.email,
+                req.body.password
+            )
+
+            // store session data in db
+            try {
+                await authRepo.storeSessionData(sessionData, connectType)
+            } catch (err: any) {
+                logger.error(err)
+                return res.status(500).send(err.message)
+            }
+
+            res.status(200).send(`${connectType} connect successful`)
         } catch (err: any) {
             logger.error(err)
-            return res.status(500).send(err.message)
-        }
-
-        res.status(200).send(`${connectType} connect successful`)
-    } catch (err: any) {
-        logger.error(err)
-        if (err instanceof HttpError && err.status) {
-            res.status(err.status).send(err.message)
-        } else {
-            res.status(500).send(err.message)
+            if (err instanceof HttpError && err.status) {
+                res.status(err.status).send(err.message)
+            } else {
+                res.status(500).send(err.message)
+            }
         }
     }
-})
+)
 
-// app.get(
-//     '/health',
-//     healthCheck({
-//         db: mysqlHealthy(pool),
-//     })
-// )
+app.get(
+    '/health',
+    healthCheck({
+        db: mysqlHealthy(pool),
+    })
+)
 
 // catch 404 and forward to error handler
 app.use(function (req: Request, res: Response, next: NextFunction) {

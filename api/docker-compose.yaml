@@ -8,11 +8,14 @@ services:
         volumes:
             - ./dist:/app/dist
         environment:
-            - MYSQL_HOST=db
-            - MYSQL_USER=openpodcast_auth
-            - MYSQL_PASSWORD=openpodcast_auth
-            - MYSQL_DATABASE=openpodcast_auth
-            - MYSQL_PORT=3306
+            MYSQL_HOST: db
+            MYSQL_USER: openpodcast_auth
+            MYSQL_PASSWORD_FILE: /run/secrets/mysql_user
+            MYSQL_DATABASE: openpodcast_auth
+            MYSQL_PORT: 3306
+            PASSPHRASE: test
+        secrets:
+            - mysql_user
         ports:
             - '8080:8080'
         links:
@@ -24,12 +27,21 @@ services:
             - ./db_local_dev/schema.sql:/docker-entrypoint-initdb.d/00_schema.sql
         ports:
             - '33006:3306'
+        secrets:
+            - mysql_root_password
+            - mysql_user
         environment:
             MYSQL_DATABASE: openpodcast_auth
             MYSQL_USER: openpodcast_auth
-            MYSQL_ROOT_PASSWORD: openpodcast_auth
-            MYSQL_PASSWORD: openpodcast_auth
+            MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+            MYSQL_PASSWORD_FILE: /run/secrets/mysql_user
         command: --innodb-buffer-pool-size=128M --innodb-buffer-pool-chunk-size=64M --key-buffer-size=5M --event-scheduler=ON
+
+secrets:
+    mysql_root_password:
+        file: ./db_local_dev/password
+    mysql_user:
+        file: ./db_local_dev/password
 
 volumes:
     mysqldata:
